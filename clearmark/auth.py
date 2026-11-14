@@ -35,7 +35,10 @@ def register(db_path, email, password):
             "EMAIL_TAKEN",
             "An account with this email already exists. Try logging in.",
         )
-    return store.create_user(db_path, email, generate_password_hash(password))
+    return store.create_user(
+        db_path, email,
+        generate_password_hash(password, method="pbkdf2:sha256:260000"),
+    )
 
 
 def authenticate(db_path, email, password):
