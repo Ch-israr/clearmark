@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}About — ClearMark{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="wrap narrow">
+    <h1>About ClearMark</h1>
+    <p class="lead">ClearMark exists because AI-generated work is now routinely flagged by the files themselves — not by what&rsquo;s in them, but by invisible markers baked into them.</p>
+    <p>When an AI tool creates an image, a video or an audio clip, it can embed markers: Google&rsquo;s SynthID signal in the pixels or waveform, and a C2PA / Content Credentials record describing the tool that made it. Platforms read those markers and label, limit or reject the file — even when the work is yours and you have every right to share it.</p>
+    <p>ClearMark removes the markers it can remove completely — C2PA records, EXIF, XMP and ID3 metadata — and applies a best-effort disruption pass to the SynthID signal. Every cleaned file is re-checked before it is offered for download, and failed jobs are never charged.</p>
+    <p>We are deliberately honest about the limit: SynthID removal cannot be guaranteed by anyone, because the detector is not public. We would rather tell you that plainly than sell you a promise we cannot keep.</p>
+    <p>Files are uploaded to our server for cleaning and deleted within an hour. Nothing is kept, shared or used for training.</p>
+  </div>
+</section>
+{% endblock %}

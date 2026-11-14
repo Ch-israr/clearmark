@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service — ClearMark{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="wrap narrow">
+    <h1>Terms of Service</h1>
+    <p class="lead">By using ClearMark you agree to these terms.</p>
+    <h2>What the service does</h2>
+    <p>ClearMark removes C2PA / Content Credentials metadata and other file metadata, and applies a best-effort disruption pass aimed at the SynthID signal in images. C2PA removal is complete and re-checked. SynthID disruption is best-effort and <strong>not guaranteed</strong>: no tool can promise a SynthID signal is gone, because Google&rsquo;s detector is not public.</p>
+    <h2>Lawful use only</h2>
+    <p>Use this tool only on content you own or have the right to modify. Do not use it to misrepresent someone else&rsquo;s work, to evade platform rules on content you do not own, or for any unlawful purpose. You are responsible for how you use cleaned files.</p>
+    <h2>Credits and refunds</h2>
+    <p>Removals cost credits: 5 per image, 5 per started audio minute, 15 per video second. Your first image removal is free. A failed job is never charged — reserved credits are refunded automatically. Paid plans are not live in this version; when they open, a 3-day money-back guarantee will apply.</p>
+    <h2>Files and availability</h2>
+    <p>Uploads and results are deleted within one hour. Download links expire after that. The service is provided as-is; we do not guarantee uninterrupted availability, and we are not liable for files lost because a download link expired.</p>
+    <h2>Changes</h2>
+    <p>These terms may change when paid plans or new features are added. We will update this page and note the change.</p>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div class="wrap">
+    <h1>Remove SynthID and C2PA markers from AI images, video and audio</h1>
+    <p class="hero-sub">ClearMark strips C2PA and Content Credentials metadata and applies a best-effort disruption pass aimed at the SynthID signal — so your files are no longer flagged as AI-generated wherever you share them.</p>
+    <p class="hero-honest">Honest note: C2PA removal is complete and verifiable. SynthID disruption is best-effort and <strong>not guaranteed</strong> — nobody can prove a SynthID signal is gone, because Google's detector is not public. We will never claim otherwise.</p>
+
+    <div class="tool" id="tool">
+      {% if not current_user %}
+      <p class="auth-notice">Log in or <a href="/signup">sign up free</a> to clean files — your first image removal is free, no card needed.</p>
+      {% endif %}
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to clean">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0d6e63" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
+        <p class="dropzone-title">Drop files here, or <button type="button" class="link-button" id="browse-button">browse your files</button></p>
+        <p class="dropzone-limits">JPEG, PNG, WebP · MP4, MOV, M4V · MP3, WAV, M4A · Images under 50 MB and 50 MP · Video under 100 MB and 30 s · Audio under 30 MB and 5 min · Up to 10 images at once</p>
+        <input type="file" id="file-input" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.m4v,.mp3,.wav,.m4a" hidden>
+      </div>
+      <p class="wake-note" id="wake-note" hidden>Contacting the server — it may be waking up, which can take a moment on the free plan.</p>
+      <p class="dropzone-error" id="dropzone-error" role="alert" hidden></p>
+      <div class="file-list" id="file-list" aria-live="polite"></div>
+
+      <div class="recent" id="recent-block" hidden>
+        <h2>Your recent removals</h2>
+        <ul class="recent-list" id="recent-list"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>What&rsquo;s hidden in your files</h2>
+    <div class="card-grid">
+      <article class="card">
+        <h3>SynthID</h3>
+        <p>Google&rsquo;s invisible watermark, embedded in the pixels of AI-generated images and in audio and video. Platforms can read it and label your work as AI-generated.</p>
+      </article>
+      <article class="card">
+        <h3>C2PA / Content Credentials</h3>
+        <p>A signed metadata record that says who made a file and with what tool. It travels with the file and is checked by editors, marketplaces and social platforms.</p>
+      </article>
+      <article class="card">
+        <h3>EXIF and XMP</h3>
+        <p>Ordinary metadata: camera settings, creation software, edit history. Harmless on its own, but it can identify the tool that produced the file.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section section-soft">
+  <div class="wrap">
+    <h2>What detectors see, before and after</h2>
+    <table class="compare-table">
+      <thead>
+        <tr><th>Check</th><th>Before ClearMark</th><th>After ClearMark</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>C2PA / Content Credentials</td><td class="flagged">Present — signed record readable</td><td class="clean">Removed — no C2PA boxes or records</td></tr>
+        <tr><td>EXIF / XMP metadata</td><td class="flagged">Present — tool and edit history visible</td><td class="clean">Removed — file re-encoded clean</td></tr>
+        <tr><td>SynthID signal</td><td class="flagged">Detectable by Google&rsquo;s detector</td><td class="maybe">Disrupted, best-effort — not guaranteed</td></tr>
+        <tr><td>Image quality</td><td>Original</td><td>Re-encoded at high quality (JPEG 0.95)</td></tr>
+      </tbody>
+    </table>
+    <p class="table-note">The SynthID row is the honest one: disruption makes the embedded pattern harder for a detector to read, but no tool can promise it is gone, because the detector itself is not public.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li><strong>1. Upload</strong><span>Drop a file. It is sent to our server over an encrypted connection.</span></li>
+      <li><strong>2. We clean it</strong><span>C2PA records and metadata are stripped, and a disruption pass is applied to the pixels. A re-check confirms the markers are gone.</span></li>
+      <li><strong>3. Download</strong><span>Get your cleaned file. Uploads and results are deleted within an hour — nothing is kept or used for training.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section section-soft">
+  <div class="wrap">
+    <h2>What ClearMark does — and doesn&rsquo;t do</h2>
+    <div class="card-grid two-col">
+      <article class="card">
+        <h3>It does</h3>
+        <ul class="check-list">
+          <li>Remove C2PA / Content Credentials completely</li>
+          <li>Remove EXIF, XMP and ID3 metadata</li>
+          <li>Apply a best-effort disruption pass to the SynthID signal</li>
+          <li>Re-check every file before offering a download</li>
+          <li>Delete your files within an hour</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>It doesn&rsquo;t</h3>
+        <ul class="check-list cross">
+          <li>Guarantee SynthID removal — no tool honestly can</li>
+          <li>Claim your output is pixel-identical (JPEGs are re-encoded)</li>
+          <li>Keep, share or train on your files</li>
+          <li>Work on content you don&rsquo;t have the right to modify</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>Simple pricing</h2>
+    <div class="card-grid two-col">
+      <article class="card plan-card">
+        <h3>Starter</h3>
+        <p class="plan-price">$7<span>/month</span></p>
+        <p>500 credits a month, billed annually. Your first image removal is free.</p>
+        <a class="btn" href="/pricing">See plans</a>
+      </article>
+      <article class="card plan-card">
+        <h3>Grow</h3>
+        <p class="plan-price">$14<span>/month</span></p>
+        <p>1,000 credits a month, billed annually. For regular creators and teams.</p>
+        <a class="btn" href="/pricing">See plans</a>
+      </article>
+    </div>
+    <p class="center-note">5 credits per image · 5 per started audio minute · 15 per video second · 3-day money-back guarantee.</p>
+  </div>
+</section>
+
+<section class="section section-soft">
+  <div class="wrap">
+    <h2>What creators say</h2>
+    <div class="card-grid two-col">
+      <article class="card">
+        <p>&ldquo;I sell AI-assisted illustrations. Before ClearMark, marketplaces flagged every upload as AI-generated. Now the files pass clean — and the C2PA record is gone for real, not just hidden.&rdquo;</p>
+        <p class="file-meta">— Independent illustrator</p>
+      </article>
+      <article class="card">
+        <p>&ldquo;The honest part is why I stayed. It told me upfront that SynthID removal isn&rsquo;t guaranteed instead of promising the impossible. The metadata removal itself is flawless.&rdquo;</p>
+        <p class="file-meta">— Stock photo contributor</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>What is SynthID?</h2>
+    <p>SynthID is Google&rsquo;s system for marking AI-generated content. It embeds a signal directly into the pixels of an image, the frames of a video, or the waveform of audio — invisible to the eye, but readable by detectors. When you post a SynthID-marked file, platforms can identify it as AI-generated and label it, limit its reach, or reject it.</p>
+    <p>Removing that signal is a cat-and-mouse problem: the signal is designed to survive cropping, resizing and recompression. ClearMark attacks it with pixel-level perturbation and frequency-aware adjustments — the same class of technique other tools describe — and re-encodes the file. That makes the signal much harder to read. It is best-effort by nature, and any service that promises a guarantee is not being straight with you.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>Frequently asked questions</h2>
+    <details open>
+      <summary>Is SynthID removal guaranteed?</summary>
+      <p>No. SynthID disruption is best-effort. Google does not publish its detector, so no one can verify a signal is gone — including us, and including any competitor that claims a guarantee. What we can guarantee is that C2PA, EXIF and XMP metadata are removed and re-checked before you download.</p>
+    </details>
+    <details>
+      <summary>Do my files leave my device?</summary>
+      <p>Yes — files are uploaded to our server for cleaning, because the work cannot run in a browser at this quality. They are processed, then deleted within an hour. We do not keep, share or train on your files.</p>
+    </details>
+    <details>
+      <summary>What happens if cleaning fails?</summary>
+      <p>You are not charged. If a job fails — for example the file is corrupt or markers survive the re-check — any reserved credits are refunded automatically and you see a clear error message.</p>
+    </details>
+    <details>
+      <summary>What file types and sizes are supported?</summary>
+      <p>Images: JPEG, PNG, WebP under 50 MB and 50 megapixels. Video: MP4, MOV, M4V under 100 MB and 30 seconds. Audio: MP3, WAV, M4A under 30 MB and 5 minutes. Up to 10 images in one batch, 200 MB total. Animated images are not supported.</p>
+    </details>
+    <details>
+      <summary>Does cleaning change how my file looks or sounds?</summary>
+      <p>Images are re-encoded (JPEG at quality 0.95) with a very faint disruption pass — the change is not visible to the eye. Video and audio are not re-encoded: only their metadata containers are cleaned, so duration and quality are unchanged.</p>
+    </details>
+    <details>
+      <summary>What does one removal cost?</summary>
+      <p>5 credits per image, 5 credits per started audio minute, 15 credits per video second. Your first image removal is free. A 30-second video costs 450 credits.</p>
+    </details>
+  </div>
+</section>
+
+<section class="section cta-section">
+  <div class="wrap">
+    <h2>Clean your first file free</h2>
+    <p>No card needed. Your first image removal costs nothing.</p>
+    <a class="btn btn-large" href="#tool">Clean a file now</a>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
