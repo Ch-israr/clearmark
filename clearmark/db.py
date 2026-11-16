@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS operations (
     media TEXT NOT NULL,
     filename TEXT NOT NULL,
     cost INTEGER NOT NULL DEFAULT 0,
+    mode TEXT NOT NULL DEFAULT 'standard',
     upload_path TEXT,
     result_path TEXT,
     result_name TEXT,
@@ -66,9 +67,20 @@ def init_db(db_path):
         conn = connect(db_path)
         try:
             conn.executescript(SCHEMA)
+            _migrate(conn)
             conn.commit()
         finally:
             conn.close()
+
+
+def _migrate(conn):
+    """Add columns that older databases predate. SQLite has no
+    ADD COLUMN IF NOT EXISTS, so check the table first."""
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(operations)")}
+    if "mode" not in cols:
+        conn.execute(
+            "ALTER TABLE operations ADD COLUMN mode TEXT NOT NULL DEFAULT 'standard'"
+        )
 
 
 def _row_to_dict(row):
@@ -153,7 +165,7 @@ def mark_free_used(db_path, user_id):
 # ---------------------------------------------------------------- operations
 
 def create_operation(db_path, user_id, media, filename, cost, used_trial,
-                     upload_path, idempotency_key, expires_at):
+                     upload_path, idempotency_key, expires_at, mode="standard"):
     op_id = uuid.uuid4().hex
     now = time.time()
     with _LOCK:
@@ -161,11 +173,11 @@ def create_operation(db_path, user_id, media, filename, cost, used_trial,
         try:
             conn.execute(
                 "INSERT INTO operations (id, user_id, status, funding_state,"
-                " used_trial, media, filename, cost, upload_path,"
+                " used_trial, media, filename, cost, mode, upload_path,"
                 " idempotency_key, created_at, expires_at)"
-                " VALUES (?, ?, 'uploaded', 'reserved', ?, ?, ?, ?, ?, ?, ?, ?)",
+                " VALUES (?, ?, 'uploaded', 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (op_id, user_id, int(used_trial), media, filename, cost,
-                 str(upload_path), idempotency_key, now, expires_at),
+                 mode, str(upload_path), idempotency_key, now, expires_at),
             )
             conn.commit()
         finally:

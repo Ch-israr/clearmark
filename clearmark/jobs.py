@@ -44,9 +44,9 @@ def _timeout_for(media):
     return TIMEOUT_VIDEO if media == "video" else TIMEOUT_IMAGE_AUDIO
 
 
-def _run_processor(media, src, dst, ext):
+def _run_processor(media, src, dst, ext, mode="standard"):
     if media == "image":
-        return clean_image(src, dst)
+        return clean_image(src, dst, mode=mode)
     if media == "video":
         return clean_video(src, dst)
     if media == "audio":
@@ -62,13 +62,14 @@ def _process_one(db_path, op):
     dst = result_dir / f"{op['id']}.{src.suffix.lstrip('.') or 'bin'}"
     media = op["media"]
     ext = src.suffix.lstrip(".").lower()
+    mode = op.get("mode") or "standard"
     timeout = _timeout_for(media)
 
     outcome = {}
 
     def target():
         try:
-            outcome["details"] = _run_processor(media, str(src), str(dst), ext)
+            outcome["details"] = _run_processor(media, str(src), str(dst), ext, mode)
         except (ImageError, VideoError) as exc:
             outcome["error"] = JobError(exc.code, exc.message)
         except Exception as exc:  # corrupt input, disk errors, anything else
@@ -205,6 +206,7 @@ def public_operation(op, base_url=""):
         "fundingState": op["funding_state"],
         "usedTrial": bool(op["used_trial"]),
         "media": op["media"],
+        "mode": op.get("mode") or "standard",
         "filename": op["filename"],
         "cost": op["cost"],
         "createdAt": op["created_at"],

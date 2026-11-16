@@ -16,6 +16,18 @@
         <p class="dropzone-limits">JPEG, PNG, WebP · MP4, MOV, M4V · MP3, WAV, M4A · Images under 50 MB and 50 MP · Video under 100 MB and 30 s · Audio under 30 MB and 5 min · Up to 10 images at once</p>
         <input type="file" id="file-input" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.m4v,.mp3,.wav,.m4a" hidden>
       </div>
+      <fieldset class="mode-picker" id="mode-picker">
+        <legend>Image cleaning strength</legend>
+        <label class="mode-option">
+          <input type="radio" name="clean-mode" value="standard" checked>
+          <span><strong>Standard</strong> — metadata removed, image stays sharp. SynthID disruption is subtle and best-effort.</span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="clean-mode" value="strong">
+          <span><strong>Strong</strong> — a much heavier pass that pushes the SynthID signal down further on many images. The image comes out visibly softer, and some images barely change. No guarantee.</span>
+        </label>
+        <p class="mode-note">Applies to images only, at the same credit cost. Video and audio are always cleaned the same way.</p>
+      </fieldset>
       <p class="wake-note" id="wake-note" hidden>Contacting the server — it may be waking up, which can take a moment on the free plan.</p>
       <p class="dropzone-error" id="dropzone-error" role="alert" hidden></p>
       <div class="file-list" id="file-list" aria-live="polite"></div>
@@ -170,7 +182,7 @@
     </details>
     <details>
       <summary>Does cleaning change how my file looks or sounds?</summary>
-      <p>Images are re-encoded (JPEG at quality 0.95) with a very faint disruption pass — the change is not visible to the eye. Video and audio are not re-encoded: only their metadata containers are cleaned, so duration and quality are unchanged.</p>
+      <p>Standard image cleaning re-encodes (JPEG at quality 0.95) with a very faint disruption pass — the change is not visible to the eye. Strong mode applies a much heavier blur instead: it pushes the SynthID signal down further on many images, but the image comes out visibly softer, and some images barely change. Video and audio are not re-encoded: only their metadata containers are cleaned, so duration and quality are unchanged.</p>
     </details>
     <details>
       <summary>What does one removal cost?</summary>

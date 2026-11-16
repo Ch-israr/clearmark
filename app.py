@@ -171,6 +171,11 @@ def create_app():
         filename = secure_filename(uploaded.filename)
         try:
             media = classify(filename)
+            # Cleaning strength: only images offer a Strong mode; anything
+            # else (or an unknown value) falls back to Standard.
+            mode = (request.form.get("mode") or "standard").strip().lower()
+            if media != "image" or mode not in ("standard", "strong"):
+                mode = "standard"
             batch_count = int(request.form.get("batchCount", "1") or "1")
             batch_total = int(request.form.get("batchTotalBytes", "0") or "0")
             check_batch(batch_count, batch_total)
@@ -209,6 +214,7 @@ def create_app():
             op = store.create_operation(
                 str(DB_PATH), user["id"], media, filename, cost, used_trial,
                 stored_path, operation_id, time.time() + FILE_TTL_SECONDS,
+                mode=mode,
             )
             if used_trial:
                 store.mark_free_used(str(DB_PATH), user["id"])

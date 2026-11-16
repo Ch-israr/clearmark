@@ -165,6 +165,11 @@
       });
   }
 
+  function selectedMode() {
+    var checked = document.querySelector("input[name='clean-mode']:checked");
+    return checked && checked.value === "strong" ? "strong" : "standard";
+  }
+
   function uploadFile(file, batchCount, batchTotal) {
     var elements = makeCard(file);
     var operationId = (window.crypto && crypto.randomUUID)
@@ -173,6 +178,7 @@
     var form = new FormData();
     form.append("file", file);
     form.append("operationId", operationId);
+    form.append("mode", selectedMode());
     form.append("batchCount", String(batchCount));
     form.append("batchTotalBytes", String(batchTotal));
     var wakeTimer = setTimeout(function () { wakeNote.hidden = false; }, 5000);

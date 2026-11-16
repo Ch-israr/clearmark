@@ -4,12 +4,15 @@ Two real steps, both server-side:
 
 1. Re-encode with Pillow. Saving a fresh image drops EXIF, XMP, C2PA
    (JUMBF) and ICC metadata, because none of it is copied to the output.
-2. A subtle best-effort disruption pass aimed at the SynthID signal: a
-   faint high-frequency perturbation plus a very light blur, applied
-   before the re-encode. This is the same class of technique the original
-   site describes in its FAQ. It is best-effort and NOT a guarantee —
-   nobody can verify a SynthID signal is gone, because Google's detector
-   is not public.
+2. A disruption pass aimed at the SynthID signal, before the re-encode:
+   - Standard: a faint high-frequency perturbation plus a very light
+     blur. Subtle, and the image stays sharp.
+   - Strong: a heavy Gaussian blur (radius 2.0). It pushes the SynthID
+     signal down much further on many images — on our test image the
+     third-party score fell from 0.97 to 0.22 — but the image comes out
+     visibly softer, and some images barely move at all. It is honest
+     best-effort, NOT a guarantee: nobody can verify a SynthID signal
+     is gone, because Google's detector is not public.
 
 The output is then re-checked: if any known marker survives, the job
 fails instead of offering a bad download.
@@ -32,6 +35,14 @@ FORBIDDEN_MARKERS = (
 
 _NOISE_STRENGTH = 1.6
 _BLUR_RADIUS = 0.4
+# Strong mode: heavy Gaussian blur. Validated locally (see
+# ~/workspace/synthid-test/RESULTS.md, "Strong-mode validation"): on a
+# 6-image set it got 3 of 6 under a 0.5 third-party score (mean 0.68 vs
+# 0.97 before) at ~25 dB PSNR, but one image stayed at 1.0 under every
+# setting tried — so Strong is offered as best-effort, never a guarantee.
+_STRONG_BLUR_RADIUS = 2.0
+
+MODES = ("standard", "strong")
 
 
 class ProcessingError(Exception):
@@ -65,6 +76,24 @@ def _disrupt_pixels(image):
     result = Image.fromarray(rgb.astype(np.uint8), mode=image.mode)
     return result.filter(ImageFilter.GaussianBlur(radius=_BLUR_RADIUS)) \
         if _BLUR_RADIUS else result
+
+
+def _strong_pixels(image):
+    """Strong mode: a heavy Gaussian blur of the RGB channels.
+
+    Pillow's blur is C-implemented and streams, so it stays fast and
+    low-memory even on large images. Alpha is left untouched, mirroring
+    the standard pass.
+    """
+    array = np.asarray(image).astype(np.float32)
+    has_alpha = array.shape[-1] == 4
+    rgb = array[:, :, :3] if has_alpha else array
+    blurred = Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8))
+    blurred = blurred.filter(ImageFilter.GaussianBlur(radius=_STRONG_BLUR_RADIUS))
+    rgb = np.asarray(blurred).astype(np.float32)
+    if has_alpha:
+        rgb = np.dstack([rgb, array[:, :, 3:4]])
+    return Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8), mode=image.mode)
 
 
 def _markers_found(path):
@@ -103,12 +132,22 @@ def inspect_image(path):
     return sorted(set(found))
 
 
-def clean_image(src, dst):
+def clean_image(src, dst, mode="standard"):
     """Clean one image file. Returns a details dict for the result card.
+
+    mode is "standard" (subtle disruption, image stays sharp) or
+    "strong" (heavy blur: pushes the SynthID signal down further on
+    many images, but the image comes out visibly softer and some
+    images barely move — best-effort, not a guarantee).
 
     Raises ProcessingError when the file cannot be decoded, is animated,
     or is over the megapixel limit.
     """
+    if mode not in MODES:
+        raise ProcessingError(
+            "INVALID_MODE",
+            "Cleaning strength must be standard or strong.",
+        )
     try:
         with Image.open(src) as image:
             image.load()
@@ -143,7 +182,7 @@ def clean_image(src, dst):
             image = image.convert("RGBA" if "A" in image.mode else "RGB")
         if image.mode in ("L", "LA"):
             image = image.convert("RGBA" if image.mode == "LA" else "RGB")
-        disrupted = _disrupt_pixels(image)
+        disrupted = _strong_pixels(image) if mode == "strong" else _disrupt_pixels(image)
         save_kwargs = {}
         if fmt == "JPEG":
             save_kwargs = {"quality": 95, "optimize": True}
@@ -161,11 +200,22 @@ def clean_image(src, dst):
             "CLEANING_FAILED",
             "Markers were still present after cleaning, so no download was produced.",
         )
-    return {
-        "removed": before,
-        "note": (
+    if mode == "strong":
+        note = (
+            "C2PA, EXIF and XMP metadata were removed by re-encoding. "
+            "Strong mode applied a heavy blur, which pushes the SynthID "
+            "signal down further on many images — but the image is "
+            "visibly softer, and some images barely move. SynthID "
+            "removal is best-effort and not guaranteed."
+        )
+    else:
+        note = (
             "C2PA, EXIF and XMP metadata were removed by re-encoding. "
             "A subtle disruption pass was applied to the pixels; SynthID "
             "removal is best-effort and not guaranteed."
-        ),
+        )
+    return {
+        "removed": before,
+        "mode": mode,
+        "note": note,
     }
